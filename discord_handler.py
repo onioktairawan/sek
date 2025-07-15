@@ -1,8 +1,7 @@
 import discord
-from discord.ext import tasks
 from dotenv import load_dotenv
 import os
-from telegram_handler import send_to_telegram
+from bridge import send_to_telegram
 from db import save_message, is_mention_or_reply
 
 load_dotenv()
@@ -29,4 +28,3 @@ async def on_message(message):
 
 def run_discord_bot():
     return client.start(DISCORD_TOKEN)
-
