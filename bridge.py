@@ -1,13 +1,23 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from utils import format_discord_message
-import telegram_handler
+from telegram_handler import telegram_bot
 
-async def send_to_telegram(author, content, is_reply, discord_msg_id):
-    keyboard = [[InlineKeyboardButton("💬 Balas", callback_data=f"reply|{discord_msg_id}")]]
-    sent = await telegram_handler.app.bot.send_message(
-        chat_id=telegram_handler.TELEGRAM_GROUP_ID,
-        text=format_discord_message(author, content, is_reply),
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-    return sent.message_id
+def build_keyboard(discord_message_id):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔁 Balas", callback_data=f"reply|{discord_message_id}")]
+    ])
+
+async def send_to_telegram(author, content, is_reply, discord_message_id):
+    try:
+        prefix = "Balasan untuk Anda:" if is_reply else "Pesan Baru:"
+        text = f"👤 {author}\n{prefix}\n{content}"
+        keyboard = build_keyboard(discord_message_id)
+
+        msg = await telegram_bot.send_message(
+            chat_id=telegram_bot.group_chat_id,
+            text=text,
+            reply_markup=keyboard
+        )
+        return msg.message_id
+    except Exception as e:
+        print(f"[Bridge] ❌ Gagal kirim ke Telegram: {e}")
+        return None
