@@ -8,11 +8,11 @@ from telegram.ext import (
 )
 from dotenv import load_dotenv
 import os
-from utils import format_telegram_reply
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_GROUP_ID = int(os.getenv("TELEGRAM_GROUP_ID"))
+DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 
 reply_map = {}
 telegram_bot = None  # Akan diisi oleh wrapper
@@ -73,14 +73,19 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_to = data["discord_msg_id"]
         text = update.message.text
 
-        from discord_handler import client
-        discord_channel = client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
-        if discord_channel:
-            try:
-                reply_msg = await discord_channel.fetch_message(reply_to)
-                await reply_msg.reply(text)
-            except:
-                await discord_channel.send(text)
+        try:
+            from discord_handler import client
+            discord_channel = client.get_channel(DISCORD_CHANNEL_ID)
+            if discord_channel:
+                try:
+                    reply_msg = await discord_channel.fetch_message(reply_to)
+                    await reply_msg.reply(text)
+                    print(f"[Telegram → Discord] ✅ Reply terkirim ke {reply_to}")
+                except Exception as e:
+                    print(f"[Telegram → Discord] ⚠️ Gagal reply: {e}")
+                    await discord_channel.send(text)
+        except Exception as e:
+            print(f"[Telegram → Discord] ❌ Error umum: {e}")
 
 async def run_telegram_bot():
     global telegram_bot
