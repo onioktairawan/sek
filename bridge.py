@@ -7,6 +7,10 @@ def build_keyboard(discord_message_id):
     ])
 
 async def send_to_telegram(author, content, is_reply, discord_message_id):
+    if telegram_bot is None:
+        print("[Bridge] ❌ Gagal kirim ke Telegram: telegram_bot belum siap")
+        return None
+
     try:
         prefix = "Balasan untuk Anda:" if is_reply else "Pesan Baru:"
         text = f"👤 {author}\n{prefix}\n{content}"
