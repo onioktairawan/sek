@@ -15,7 +15,6 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_GROUP_ID = int(os.getenv("TELEGRAM_GROUP_ID"))
 
-app = None
 reply_map = {}
 
 async def handle_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,16 +42,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 await discord_channel.send(format_telegram_reply(name, text))
 
+# ✅ Versi stabil run_polling
 async def run_telegram_bot():
-    global app
+    print("[Telegram] Bot starting...")
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CallbackQueryHandler(handle_reply_button))
     app.add_handler(MessageHandler(filters.TEXT & filters.Chat(TELEGRAM_GROUP_ID), handle_text))
-
-    await app.initialize()
-    await app.start()
-    print("[Telegram] Bot started")
-    await app.updater.start_polling()
-    await app.updater.wait_until_shutdown()
-    await app.stop()
-    await app.shutdown()
+    await app.run_polling(close_loop=False)
