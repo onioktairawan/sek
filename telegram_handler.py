@@ -23,10 +23,11 @@ class TelegramBotWrapper:
         self.app = application
         self.group_chat_id = group_chat_id
 
-    async def send_message(self, text, reply_markup=None):
+    async def send_message(self, text, reply_to_message_id=None, reply_markup=None):
         return await self.app.bot.send_message(
             chat_id=self.group_chat_id,
             text=text,
+            reply_to_message_id=reply_to_message_id,
             reply_markup=reply_markup,
             parse_mode="HTML"
         )
@@ -43,7 +44,7 @@ async def send_to_telegram(author, content, is_reply, discord_message_id):
         return None
 
     try:
-        text = f"👤 {author}\n{content}"
+        text = f"<b>{author}</b>\n{content}"
         keyboard = build_keyboard(discord_message_id)
 
         msg = await telegram_bot.send_message(text=text, reply_markup=keyboard)
@@ -59,24 +60,27 @@ async def handle_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE
     data = query.data
     if data.startswith("reply|"):
         discord_msg_id = data.split("|")[1]
-        reply_map[query.from_user.id] = discord_msg_id
+        reply_map[query.from_user.id] = {
+            "discord_msg_id": discord_msg_id,
+            "telegram_msg_id": query.message.message_id
+        }
         await query.message.reply_text("Silakan ketik balasan Anda:")
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id in reply_map:
-        reply_to = reply_map.pop(user_id)
+        data = reply_map.pop(user_id)
+        reply_to = data["discord_msg_id"]
         text = update.message.text
-        name = update.message.from_user.full_name
 
         from discord_handler import client
         discord_channel = client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
         if discord_channel:
             try:
                 reply_msg = await discord_channel.fetch_message(reply_to)
-                await reply_msg.reply(format_telegram_reply(name, text))
+                await reply_msg.reply(text)
             except:
-                await discord_channel.send(format_telegram_reply(name, text))
+                await discord_channel.send(text)
 
 async def run_telegram_bot():
     global telegram_bot
