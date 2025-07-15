@@ -1,10 +1,9 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CallbackQueryHandler, MessageHandler, filters, CommandHandler
+from telegram.ext import ApplicationBuilder, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from dotenv import load_dotenv
 import os
 from db import get_discord_id_by_telegram_id
-from utils import format_discord_message, format_telegram_reply
-import discord_handler
+from utils import format_telegram_reply
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -12,17 +11,6 @@ TELEGRAM_GROUP_ID = int(os.getenv("TELEGRAM_GROUP_ID"))
 
 app = None
 reply_map = {}
-
-async def send_to_telegram(author, content, is_reply, discord_msg_id):
-    global app
-    keyboard = [[InlineKeyboardButton("\ud83d\udcac Balas", callback_data=f"reply|{discord_msg_id}")]]
-    sent = await app.bot.send_message(
-        chat_id=TELEGRAM_GROUP_ID,
-        text=format_discord_message(author, content, is_reply),
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-    return sent.message_id
 
 async def handle_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -39,7 +27,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_to = reply_map.pop(user_id)
         text = update.message.text
         name = update.message.from_user.full_name
-        discord_channel = discord_handler.client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
+
+        from discord_handler import client  # ⬅️ Import lokal (hindari circular)
+        discord_channel = client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
         if discord_channel:
             try:
                 reply_msg = await discord_channel.fetch_message(reply_to)
