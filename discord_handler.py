@@ -9,12 +9,11 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 OWNER_ID = int(os.getenv("DISCORD_USER_ID"))
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.guilds = True
-intents.members = True
+client = discord.Client()
 
-client = discord.Client(intents=intents)
+@client.event
+async def on_ready():
+    print(f"[Discord] Logged in as {client.user}")
 
 @client.event
 async def on_ready():
