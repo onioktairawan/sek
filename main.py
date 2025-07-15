@@ -4,10 +4,25 @@ from discord_handler import run_discord_bot
 
 async def main():
     print("[Main] Memulai bot...")
-    await asyncio.gather(
-        run_discord_bot(),
-        run_telegram_bot()
+
+    discord_task = asyncio.create_task(run_discord_bot())
+    telegram_task = asyncio.create_task(run_telegram_bot())
+
+    done, pending = await asyncio.wait(
+        [discord_task, telegram_task],
+        return_when=asyncio.FIRST_EXCEPTION
     )
 
+    # Log error jika salah satu task gagal
+    for task in done:
+        if task.exception():
+            print(f"[ERROR] Task gagal: {task.exception()}")
+            for p in pending:
+                p.cancel()
+            break
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Dihentikan oleh pengguna.")
