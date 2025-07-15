@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from bridge import send_to_telegram
 from db import save_message, is_mention_or_reply
+from telegram_handler import send_to_telegram
+
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
