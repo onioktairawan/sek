@@ -1,27 +1,20 @@
 import asyncio
+from discord_handler import run_discord_client
 from telegram_handler import run_telegram_bot
-from discord_handler import run_discord_bot
 
 async def main():
     print("[Main] Memulai bot...")
 
-    discord_task = asyncio.create_task(run_discord_bot())
-    telegram_task = asyncio.create_task(run_telegram_bot())
+    # Jalankan Telegram bot dulu supaya telegram_bot siap
+    tg_task = asyncio.create_task(run_telegram_bot())
 
-    done, pending = await asyncio.wait(
-        [discord_task, telegram_task],
-        return_when=asyncio.FIRST_EXCEPTION
-    )
+    # Delay kecil untuk memastikan telegram_bot sudah ter-set
+    await asyncio.sleep(2)
 
-    for task in done:
-        if task.exception():
-            print(f"[ERROR] Task gagal: {task.exception()}")
-            for p in pending:
-                p.cancel()
-            break
+    # Jalankan Discord client setelahnya
+    dc_task = asyncio.create_task(run_discord_client())
+
+    await asyncio.gather(tg_task, dc_task)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Dihentikan oleh pengguna.")
+    asyncio.run(main())
