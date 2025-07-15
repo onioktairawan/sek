@@ -13,7 +13,6 @@ async def main():
         return_when=asyncio.FIRST_EXCEPTION
     )
 
-    # Log error jika salah satu task gagal
     for task in done:
         if task.exception():
             print(f"[ERROR] Task gagal: {task.exception()}")
