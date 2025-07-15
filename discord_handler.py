@@ -1,6 +1,6 @@
 import discord
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 from bridge import send_to_telegram
 from db import save_message, is_mention_or_reply
 
@@ -26,5 +26,7 @@ async def on_message(message):
     telegram_msg_id = await send_to_telegram(message.author.name, message.content, is_reply, message.id)
     save_message(str(message.id), telegram_msg_id, message.author.name, is_reply=is_reply)
 
-def run_discord_bot():
-    return client.start(DISCORD_TOKEN)
+# ⬇️⬇️⬇️ PERUBAHAN DI SINI!
+async def run_discord_bot():
+    print("[Discord] Connecting...")
+    await client.start(DISCORD_TOKEN)
