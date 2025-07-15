@@ -1,42 +1,53 @@
-import discord
 import os
+import discord
 from dotenv import load_dotenv
-from bridge import send_to_telegram
-from db import save_message, is_mention_or_reply
 from telegram_handler import send_to_telegram
 
-
 load_dotenv()
+
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
-DISCORD_USER_ID = None
+OWNER_ID = int(os.getenv("DISCORD_USER_ID"))
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+intents.members = True
+
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    global DISCORD_USER_ID
-    DISCORD_USER_ID = client.user.id
     print(f"[Discord] Logged in as {client.user}")
 
 @client.event
 async def on_message(message):
-    print(f"[Discord] Pesan masuk dari {message.author}: {message.content}")
-    print(f"[Discord] Channel ID pesan: {message.channel.id}")
-
     if message.channel.id != DISCORD_CHANNEL_ID:
         print(f"[Discord] ❌ Channel tidak cocok: {message.channel.id}")
         return
 
-    if message.author.id == client.user.id:
+    if message.author.id == OWNER_ID:
         print("[Discord] ❌ Abaikan pesan dari diri sendiri.")
         return
 
+    author = f"{message.author.name}#{message.author.discriminator}"
+    content = message.content or "[Pesan kosong]"
+    is_reply = (
+        message.reference is not None
+        and message.reference.resolved is not None
+        and getattr(message.reference.resolved, "author", None) is not None
+        and message.reference.resolved.author.id == OWNER_ID
+    ) or (f"<@{OWNER_ID}>" in content or f"<@!{OWNER_ID}>" in content)
+
+    print(f"[Discord] Pesan masuk dari {author}: {content}")
+    print(f"[Discord] Channel ID pesan: {message.channel.id}")
+
     try:
-        is_reply = is_mention_or_reply(DISCORD_USER_ID, message)
-        telegram_msg_id = await send_to_telegram(message.author.name, message.content, is_reply, message.id)
-        save_message(str(message.id), telegram_msg_id, message.author.name, is_reply=is_reply)
-        print("[Discord] ✅ Dikirim ke Telegram.")
+        result = await send_to_telegram(author, content, is_reply, str(message.id))
+        if result:
+            print("[Discord] ✅ Dikirim ke Telegram.")
+        else:
+            print("[Discord] ⚠️ Tidak berhasil kirim (tidak ada result).")
     except Exception as e:
         print(f"[Discord] ❌ Gagal kirim ke Telegram: {e}")
 
