@@ -1,5 +1,5 @@
 import asyncio
-from discord_handler import run_discord_client
+from discord_handler import run_discord_bot  # gunakan nama fungsi yang benar
 from telegram_handler import run_telegram_bot
 
 async def main():
@@ -11,8 +11,8 @@ async def main():
     # Delay kecil untuk memastikan telegram_bot sudah ter-set
     await asyncio.sleep(2)
 
-    # Jalankan Discord client setelahnya
-    dc_task = asyncio.create_task(run_discord_client())
+    # Jalankan Discord bot setelah itu
+    dc_task = asyncio.create_task(run_discord_bot())
 
     await asyncio.gather(tg_task, dc_task)
 
