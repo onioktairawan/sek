@@ -33,7 +33,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
         name = update.message.from_user.full_name
 
-        from discord_handler import client  # Hindari circular import
+        from discord_handler import client
         discord_channel = client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
         if discord_channel:
             try:
@@ -42,10 +42,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 await discord_channel.send(format_telegram_reply(name, text))
 
-# ✅ Versi stabil run_polling
+# ✅ Versi async murni tanpa run_polling conflict
 async def run_telegram_bot():
     print("[Telegram] Bot starting...")
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
     app.add_handler(CallbackQueryHandler(handle_reply_button))
     app.add_handler(MessageHandler(filters.TEXT & filters.Chat(TELEGRAM_GROUP_ID), handle_text))
-    await app.run_polling(close_loop=False)
+
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    # Jangan tunggu shutdown (loop handled oleh main)
