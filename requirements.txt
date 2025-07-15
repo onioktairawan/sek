@@ -1,0 +1,4 @@
+discord.py-self@git+https://github.com/dolfies/discord.py-self.git
+python-telegram-bot==20.6
+pymongo==4.6.1
+python-dotenv==1.0.1
