@@ -19,14 +19,25 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.channel.id != DISCORD_CHANNEL_ID or message.author.id == client.user.id:
+    print(f"[Discord] Pesan masuk dari {message.author}: {message.content}")
+    print(f"[Discord] Channel ID pesan: {message.channel.id}")
+
+    if message.channel.id != DISCORD_CHANNEL_ID:
+        print(f"[Discord] ❌ Channel tidak cocok: {message.channel.id}")
         return
 
-    is_reply = is_mention_or_reply(DISCORD_USER_ID, message)
-    telegram_msg_id = await send_to_telegram(message.author.name, message.content, is_reply, message.id)
-    save_message(str(message.id), telegram_msg_id, message.author.name, is_reply=is_reply)
+    if message.author.id == client.user.id:
+        print("[Discord] ❌ Abaikan pesan dari diri sendiri.")
+        return
 
-# ⬇️⬇️⬇️ PERUBAHAN DI SINI!
+    try:
+        is_reply = is_mention_or_reply(DISCORD_USER_ID, message)
+        telegram_msg_id = await send_to_telegram(message.author.name, message.content, is_reply, message.id)
+        save_message(str(message.id), telegram_msg_id, message.author.name, is_reply=is_reply)
+        print("[Discord] ✅ Dikirim ke Telegram.")
+    except Exception as e:
+        print(f"[Discord] ❌ Gagal kirim ke Telegram: {e}")
+
 async def run_discord_bot():
     print("[Discord] Connecting...")
     await client.start(DISCORD_TOKEN)
