@@ -1,5 +1,11 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CallbackQueryHandler, MessageHandler, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters
+)
 from dotenv import load_dotenv
 import os
 from db import get_discord_id_by_telegram_id
@@ -28,7 +34,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
         name = update.message.from_user.full_name
 
-        from discord_handler import client  # ⬅️ Import lokal (hindari circular)
+        from discord_handler import client  # Hindari circular import
         discord_channel = client.get_channel(int(os.getenv("DISCORD_CHANNEL_ID")))
         if discord_channel:
             try:
@@ -42,6 +48,11 @@ async def run_telegram_bot():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CallbackQueryHandler(handle_reply_button))
     app.add_handler(MessageHandler(filters.TEXT & filters.Chat(TELEGRAM_GROUP_ID), handle_text))
+
+    await app.initialize()
     await app.start()
     print("[Telegram] Bot started")
     await app.updater.start_polling()
+    await app.updater.wait_until_shutdown()
+    await app.stop()
+    await app.shutdown()
