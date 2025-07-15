@@ -17,7 +17,7 @@ TELEGRAM_GROUP_ID = int(os.getenv("TELEGRAM_GROUP_ID"))
 
 reply_map = {}
 
-# === Wrapper Bot agar bisa dipanggil dari bridge.py ===
+# === Wrapper untuk dipanggil dari bridge.py ===
 class TelegramBotWrapper:
     def __init__(self, application, group_chat_id):
         self.app = application
@@ -26,10 +26,8 @@ class TelegramBotWrapper:
     async def send_message(self, chat_id, text, reply_markup=None):
         return await self.app.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
 
-telegram_bot = None  # Di-set saat run_telegram_bot dijalankan
+telegram_bot = None
 
-
-# === Handler tombol balas (inline keyboard) ===
 async def handle_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -39,8 +37,6 @@ async def handle_reply_button(update: Update, context: ContextTypes.DEFAULT_TYPE
         reply_map[query.from_user.id] = discord_msg_id
         await query.message.reply_text("Silakan ketik balasan Anda:")
 
-
-# === Handler pesan teks (balasan ke Discord) ===
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if user_id in reply_map:
@@ -57,8 +53,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 await discord_channel.send(format_telegram_reply(name, text))
 
-
-# === Jalankan Telegram Bot ===
 async def run_telegram_bot():
     global telegram_bot
     print("[Telegram] Bot starting...")
@@ -73,4 +67,3 @@ async def run_telegram_bot():
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
-    # Jangan tunggu shutdown di sini, loop sudah ditangani main.py
