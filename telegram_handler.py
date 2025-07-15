@@ -27,7 +27,8 @@ class TelegramBotWrapper:
         return await self.app.bot.send_message(
             chat_id=self.group_chat_id,
             text=text,
-            reply_markup=reply_markup
+            reply_markup=reply_markup,
+            parse_mode="HTML"
         )
 
 def build_keyboard(discord_message_id):
@@ -42,8 +43,7 @@ async def send_to_telegram(author, content, is_reply, discord_message_id):
         return None
 
     try:
-        prefix = "Balasan untuk Anda:" if is_reply else "Pesan Baru:"
-        text = f"👤 {author}\n{prefix}\n{content}"
+        text = f"👤 {author}\n{content}"
         keyboard = build_keyboard(discord_message_id)
 
         msg = await telegram_bot.send_message(text=text, reply_markup=keyboard)
